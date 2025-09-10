@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
-const fetch = require("node-fetch");
+const fetch = require("node-fetch"); // make sure you use node-fetch@2
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -19,7 +19,8 @@ module.exports = {
           { name: "General", value: "g" },
           { name: "Sensitive", value: "s" },
           { name: "Questionable", value: "q" },
-          { name: "Explicit", value: "e" }
+          { name: "Explicit", value: "e" },
+          { name: "ANY", value: "any" }
         )
         .setRequired(false)
     ),
@@ -29,9 +30,9 @@ module.exports = {
     const rating = interaction.options.getString("rating");
 
     // prevent posting lewd content in non-NSFW channels
-    if ((rating === "q" || rating === "e") && !interaction.channel.nsfw) {
+    if ((rating === "q" || rating === "e" || rating === "any") && !interaction.channel.nsfw) {
       return interaction.reply({
-        content: "⚠️ This command can only be used in **NSFW channels** when selecting `Questionable` or `Explicit` rating.",
+        content: "⚠️ This command can only be used in **NSFW channels** when selecting `Questionable`, `Explicit`, or `ANY` rating.",
         ephemeral: true,
       });
     }
@@ -40,9 +41,9 @@ module.exports = {
     let formattedTags = tags.split(",").map(tag => tag.trim()).join("+");
 
     if (!rating) {
-      formattedTags += "+rating:g,s";
-    } else {
-      formattedTags += `+rating:${rating}`;
+      formattedTags += "+rating:g,s"; // default general + sensitive
+    } else if (rating !== "any") {
+      formattedTags += `+rating:${rating}`; // specific rating
     }
 
     const url = `https://danbooru.donmai.us/posts.json?tags=${formattedTags}&limit=100`;
@@ -60,7 +61,7 @@ module.exports = {
       const data = await response.json();
 
       if (!data.length) {
-        // if no posts found, call tagsearch
+        // no posts found, call tagsearch
         const tagSearchUrl = `https://danbooru.donmai.us/tags.json?search[name_matches]=*${encodeURIComponent(tags)}*&limit=10&order=count`;
         const tagResp = await fetch(tagSearchUrl, {
           headers: {
@@ -93,20 +94,20 @@ module.exports = {
           .slice(0, 10)
           .map(([name], index) => {
             const link = `[${name}](https://danbooru.donmai.us/posts?tags=${encodeURIComponent(name)})`;
-            return index < 5 ? `**${link}**` : link;
+            return index < 3 ? `**${link}**` : link;
           })
           .join("\n");
 
         const embed = new EmbedBuilder()
-          .setTitle(`No results found. Did you mean?`)
+          .setTitle(`Did you mean?`)
           .setDescription(tagList)
-          .setColor(0xA60000)
+          .setColor(0xFFBF00)
           .setFooter({ text: "Danbooru" });
 
         return interaction.reply({ embeds: [embed] });
       }
 
-      // pick a random post (change later by popularity???)
+      // pick a random post (later change by popularity???)
       const post = data[Math.floor(Math.random() * data.length)];
       const imageUrl = post.file_url || post.large_file_url || post.preview_file_url;
 
@@ -117,20 +118,21 @@ module.exports = {
         });
       }
 
-      const ratingMap = { g: "General", s: "Sensitive", q: "Questionable", e: "Explicit" };
+    const ratingMap = { g: "General", s: "Sensitive", q: "Questionable", e: "Explicit" };
 
-      const embed = new EmbedBuilder()
-        .setTitle(`Danbooru Post #${post.id}`)
-        .setURL(`https://danbooru.donmai.us/posts/${post.id}`)
-        .setImage(imageUrl)
-        .addFields(
-          { name: "Artist", value: post.tag_string_artist || "Unknown", inline: true },
-          { name: "Copyright", value: post.tag_string_copyright || "Unknown", inline: true },
-          { name: "Characters", value: post.tag_string_character || "None", inline: false },
-          { name: "Rating", value: ratingMap[post.rating] || post.rating, inline: true }
-        )
-        .setFooter({ text: "Danbooru" })
-        .setColor(0xFFBF00);
+    const embed = new EmbedBuilder()
+      .setTitle(`Danbooru Post #${post.id}`)
+      .setURL(`https://danbooru.donmai.us/posts/${post.id}`)
+      .setImage(imageUrl)
+      .addFields(
+        { name: "Tags", value: tags.replace(/,/g, ", ") || "None", inline: false }, // 👈 Shows searched tags
+        { name: "Artist", value: post.tag_string_artist || "Unknown", inline: true },
+        { name: "Copyright", value: post.tag_string_copyright || "Unknown", inline: true },
+        { name: "Characters", value: post.tag_string_character || "None", inline: false },
+        { name: "Rating", value: rating === "any" ? "Any" : ratingMap[post.rating] || post.rating, inline: true }
+      )
+      .setFooter({ text: "Danbooru" })
+      .setColor(0xFFBF00);
 
       await interaction.reply({ embeds: [embed] });
     } catch (error) {
