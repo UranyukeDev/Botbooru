@@ -12,7 +12,7 @@ module.exports = {
       .setColor(0x3498db)
       .addFields(
         {
-          name: "/danbooru `<tags>` `[rating]`",
+          name: "/danrandom `<tags>` `[rating]`",
           value:
             "Fetches a **random image** from Danbooru based on given tags.\n" +
             "- `tags`: Comma-separated list of tags (e.g. `hakurei_reimu,armpits`).\n" +
@@ -28,14 +28,6 @@ module.exports = {
             "- Each page contains **25 results**.\n" +
             "- `rating` *(optional)*: Choose between `General (g)`, `Sensitive (s)`, `Questionable (q)`, `Explicit (e)`, or `ALL` (any rating). *By default (g+s)*\n" +
             "⚠️ NSFW ratings (`q`, `e`, `ALL`) can only be used in NSFW channels.",
-          inline: false,
-        },
-        {
-          name: "/tagsearch `<tag>`",
-          value:
-            "Helps you find **related tags** if you’re not sure about the spelling.\n" +
-            "- Example: `/tagsearch reimu` → suggests similar tags like `hakurei_reimu`.\n" +
-            "- Useful when `/danbooru` or `/danbrowse` finds no results.",
           inline: false,
         }
       )

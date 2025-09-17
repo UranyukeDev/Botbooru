@@ -3,8 +3,9 @@
 **Discord bot that fetches and shares images from Danbooru.**
 
 ### Implemented things
-- `/danbrowse tags:<tags> rating:<rating>` → browses Danbooru's images for chosen tags
+- `/danbrowse tags:<tags> rating:<rating>` → browses Danbooru's images for chosen tags.
 - `/danrandom tags:<tags> rating:<rating>` → pulls a completely random image for those tags instead of browsing.
+- **Autocomplete for Tags** → when typing `/danbrowse tags`, bot can suggest tags directly to avoid typos or non-existent tags.
 
 ### Planned things
 - `/taginfo tag:<tag>` → fetches description, usage count, and related tags from Danbooru’s tag API.
