@@ -12,26 +12,28 @@ module.exports = {
       .setColor(0x3498db)
       .addFields(
         {
-          name: "/danrandom `<tags>` `[rating]`",
+          name: "/danbrowse `<tags>` `[rating]`",
           value:
-            "Fetches a **random image** from Danbooru based on given tags.\n" +
-            "- `tags`: Comma-separated list of tags (e.g. `hakurei_reimu,armpits`).\n" +
-            "- `rating` *(optional)*: Choose between `General (g)`, `Sensitive (s)`, `Questionable (q)`, `Explicit (e)`, or `ALL` (any rating). *By default (g+s)*\n" +
-            "⚠️ NSFW ratings (`q`, `e`, `ALL`) can only be used in NSFW channels.",
+            "Browse through **multiple Danbooru posts** with navigation buttons.\n" +
+            "- `tags`: Space-separated list of tags (e.g. `hakurei_reimu armpits`). Autocomplete supported.\n" +
+            "- `rating` *(optional)*: `General (g)`, `Sensitive (s)`, `Questionable (q)`, `Explicit (e)`, or `ALL` (any rating).\n" +
+            "➡️ Default: `General + Sensitive (g+s)`.\n" +
+            "- Buttons: ⬅️ Prev, ➡️ Next, ⏮️ Prev Page, ⏭️ Next Page, ❌ Leave.\n" +
+            "⚠️ NSFW ratings (`q`, `e`, `ALL`) are **only allowed in NSFW channels**.",
           inline: false,
         },
         {
-          name: "/danbrowse `<tags>` `[rating]`",
+          name: "/danrandom `<tags>` `[rating]`",
           value:
-            "Browse through multiple Danbooru posts with **navigation buttons**.\n" +
-            "- Buttons: ⬅️ Prev, ➡️ Next, ⏮️ Prev Page, ⏭️ Next Page, ❌ Leave.\n" +
-            "- Each page contains **25 results**.\n" +
-            "- `rating` *(optional)*: Choose between `General (g)`, `Sensitive (s)`, `Questionable (q)`, `Explicit (e)`, or `ALL` (any rating). *By default (g+s)*\n" +
-            "⚠️ NSFW ratings (`q`, `e`, `ALL`) can only be used in NSFW channels.",
+            "Fetches a **completely random Danbooru post** with the specified tags.\n" +
+            "- `tags`: Space-separated list of tags (e.g. `hakurei_reimu miko`). Autocomplete supported.\n" +
+            "- `rating` *(optional)*: `General (g)`, `Sensitive (s)`, `Questionable (q)`, `Explicit (e)`, or `ALL` (any rating).\n" +
+            "➡️ Default: `General + Sensitive (g+s)`.\n" +
+            "⚠️ NSFW ratings (`q`, `e`, `ALL`) are **only allowed in NSFW channels**.",
           inline: false,
         }
       )
-      .setFooter({ text: "." });
+      .setFooter({ text: "Tip: Use tag autocomplete to find popular tags quickly!" });
 
     await interaction.reply({ embeds: [embed], ephemeral: true });
   },

@@ -7,9 +7,16 @@ module.exports = {
     .setDescription("Fetch a random Danbooru image for given tags")
     .addStringOption(option =>
       option
-        .setName("tags")
-        .setDescription("Comma-separated tags to search for")
+        .setName("tag1")
+        .setDescription("First tag")
         .setRequired(true)
+        .setAutocomplete(true)
+    )
+    .addStringOption(option =>
+      option
+        .setName("tag2")
+        .setDescription("Second tag (optional)")
+        .setRequired(false)
         .setAutocomplete(true)
     )
     .addStringOption(option =>
@@ -27,21 +34,20 @@ module.exports = {
     ),
 
   async execute(interaction) {
-    const tags = interaction.options.getString("tags");
+    const tag1 = interaction.options.getString("tag1");
+    const tag2 = interaction.options.getString("tag2");
     const rating = interaction.options.getString("rating");
 
-    // prevent posting lewd content in non-NSFW channels
     if ((rating === "q" || rating === "e" || rating === "any") && !interaction.channel.nsfw) {
       return interaction.reply({
         content: "⚠️ This command can only be used in **NSFW channels** when selecting `Questionable`, `Explicit`, or `ANY` rating.",
-        ephemeral: true,
+        flags: 64,
       });
     }
 
-    // format tags
-    let formattedTags = tags.split(",").map(tag => tag.trim()).join("+");
+    let formattedTags = [tag1, tag2].filter(Boolean).join("+");
     if (!rating) {
-      formattedTags += "+rating:g,s"; // default safe-ish
+      formattedTags += "+rating:g,s";
     } else if (rating !== "any") {
       formattedTags += `+rating:${rating}`;
     }
@@ -67,7 +73,7 @@ module.exports = {
       if (!post || !post.id) {
         return interaction.reply({
           content: "❌ No results found for those tags.",
-          ephemeral: true,
+          flags: 64,
         });
       }
 
@@ -80,7 +86,7 @@ module.exports = {
         .setImage(imageUrl)
         .setColor(0xFFBF00)
         .addFields(
-          { name: "Tags", value: tags.replace(/,/g, ", ") || "None", inline: false },
+          { name: "Tags", value: [tag1, tag2].filter(Boolean).join(", ") || "None", inline: false },
           { name: "Artist", value: post.tag_string_artist || "Unknown", inline: true },
           { name: "Copyright", value: post.tag_string_copyright || "Unknown", inline: true },
           { name: "Characters", value: post.tag_string_character || "None", inline: false },
@@ -94,41 +100,35 @@ module.exports = {
       console.error(error);
       await interaction.reply({
         content: "❌ Error fetching data from Danbooru.",
-        ephemeral: true,
+        flags: 64,
       });
     }
   },
-  
+
   async autocomplete(interaction) {
-    const focusedValue = interaction.options.getFocused(); // current text being typed
-    if (!focusedValue) {
-      return interaction.respond([]); // empty until user starts typing
-    }
+    const focused = interaction.options.getFocused();
+    if (!focused) return interaction.respond([]);
 
     try {
-      const url = `https://danbooru.donmai.us/tags.json?search[name_matches]=${focusedValue}*&limit=10&search[order]=count`;
-      const response = await fetch(url, {
+      const url = `https://danbooru.donmai.us/tags.json?search[name_matches]=${encodeURIComponent(focused)}*&limit=10&search[order]=count`;
+      const resp = await fetch(url, {
         headers: {
           Authorization:
             "Basic " +
-            Buffer.from(
-              `${process.env.DANBOORU_USERNAME}:${process.env.DANBOORU_API_KEY}`
-            ).toString("base64"),
+            Buffer.from(`${process.env.DANBOORU_USERNAME}:${process.env.DANBOORU_API_KEY}`).toString("base64"),
         },
       });
+      const tags = await resp.json();
 
-      const tags = await response.json();
+      const choices = tags
+        .filter(t => t.post_count > 0)
+        .slice(0, 10)
+        .map(t => ({
+          name: `${t.name} (${t.post_count})`,
+          value: t.name,
+        }));
 
-      // filter out tags with 0 post count
-      const filtered = tags.filter(tag => tag.post_count > 0);
-
-      // return up to 10 suggestions
-      const choices = filtered.map(tag => ({
-        name: `${tag.name} (${tag.post_count})`,
-        value: tag.name,
-      }));
-
-      await interaction.respond(choices.slice(0, 10));
+      await interaction.respond(choices);
     } catch (err) {
       console.error("Autocomplete error:", err);
       await interaction.respond([]);
