@@ -10,6 +10,7 @@ module.exports = {
         .setName("tags")
         .setDescription("Comma-separated tags to search for")
         .setRequired(true)
+        .setAutocomplete(true)
     )
     .addStringOption(option =>
       option
@@ -178,4 +179,40 @@ module.exports = {
       await message.edit({ components: [makeRow(true)] });
     });
   },
+  
+  async autocomplete(interaction) {
+    const focusedValue = interaction.options.getFocused(); // current text being typed
+    if (!focusedValue) {
+      return interaction.respond([]); // empty until user starts typing
+    }
+
+    try {
+      const url = `https://danbooru.donmai.us/tags.json?search[name_matches]=${focusedValue}*&limit=10&search[order]=count`;
+      const response = await fetch(url, {
+        headers: {
+          Authorization:
+            "Basic " +
+            Buffer.from(
+              `${process.env.DANBOORU_USERNAME}:${process.env.DANBOORU_API_KEY}`
+            ).toString("base64"),
+        },
+      });
+
+      const tags = await response.json();
+
+      // filter out tags with 0 post count
+      const filtered = tags.filter(tag => tag.post_count > 0);
+
+      // return up to 10 suggestions
+      const choices = filtered.map(tag => ({
+        name: `${tag.name} (${tag.post_count})`,
+        value: tag.name,
+      }));
+
+      await interaction.respond(choices.slice(0, 10));
+    } catch (err) {
+      console.error("Autocomplete error:", err);
+      await interaction.respond([]);
+    }
+  }
 };

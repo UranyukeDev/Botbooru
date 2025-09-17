@@ -20,16 +20,24 @@ client.once("ready", () => {
 });
 
 client.on("interactionCreate", async interaction => {
-  if (!interaction.isChatInputCommand()) return;
-
-  const command = client.commands.get(interaction.commandName);
-  if (!command) return;
-
-  try {
-    await command.execute(interaction);
-  } catch (error) {
-    console.error(error);
-    await interaction.reply({ content: "❌ Error while executing this command.", ephemeral: true });
+  if (interaction.isChatInputCommand()) {
+    const command = client.commands.get(interaction.commandName);
+    if (command) {
+      try {
+        await command.execute(interaction);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+  } else if (interaction.isAutocomplete()) {
+    const command = client.commands.get(interaction.commandName);
+    if (command && command.autocomplete) {
+      try {
+        await command.autocomplete(interaction);
+      } catch (err) {
+        console.error(err);
+      }
+    }
   }
 });
 

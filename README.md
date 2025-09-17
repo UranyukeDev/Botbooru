@@ -5,7 +5,6 @@
 ### Implemented things
 - `/danbrowse tags:<tags> rating:<rating>` → browses Danbooru's images for chosen tags
 - `/danrandom tags:<tags> rating:<rating>` → pulls a completely random image for those tags instead of browsing.
-- `/tagsearch tag:<tag>` → takes a user-provided tag and returns the most popular or closest matching tags from Danbooru
 
 ### Planned things
 - `/taginfo tag:<tag>` → fetches description, usage count, and related tags from Danbooru’s tag API.
